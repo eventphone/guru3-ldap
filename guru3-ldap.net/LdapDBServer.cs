@@ -167,7 +167,7 @@ namespace eventphone.guru3.ldap
                 {
                     Parent = new LdapDistinguishedName("ou", x.Event, RootDN),
                     Cn = {Entries = {x.Number}},
-                    Sn = { Entries = { x.Name}},
+                    Sn = { Entries = { String.IsNullOrEmpty(x.Name)?x.Number:x.Name}},
                     Locality = String.IsNullOrEmpty(x.Location) ? null : new LocalityAttribute {Entries = {x.Location}},
                     TelephoneNumber = new TelephoneNumberAttribute{Entries = { x.Number}}
                 })
@@ -201,6 +201,7 @@ namespace eventphone.guru3.ldap
         {
             return extensions
                 .Where(x=>x.InPhonebook)
+                .Where(x=>x.Number != String.Empty)
                 .Select(x => new LdapExtension
                 {
                     Number = x.Number,

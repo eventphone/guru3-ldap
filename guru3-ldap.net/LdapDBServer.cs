@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using eventphone.guru3.ldap.DAL;
@@ -86,38 +85,109 @@ namespace eventphone.guru3.ldap
                     else
                     {
                         //search events
-                        var events = await SearchEvent(context, request, cancellationToken);
-                        var results = new List<LdapRequestMessage>(events.Length);
-                        foreach (var item in events)
-                        {
-                            var attributes = item.GetAttributes(request.Attributes, request.TypesOnly);
-                            var rdn = new LdapAttributeTypeAndValue(item.Ou.Name, item.Ou.Entries[0], false);
-                            var dn = new LdapDistinguishedName(new LdapRelativeDistinguishedName(rdn), RootDN);
-                            results.Add(request.Result(dn, attributes, new LdapControl[0]));
-                        }
+                        var events = await SearchEventAsync(context.Events, request, cancellationToken);
+                        var results = events.ToList();
 
                         if (request.Scope == SearchScope.WholeSubtree)
                         {
                             //include extensions
-                            throw new NotImplementedException();
+                            var dbExtensions = SearchEvent(context.Events, request).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
+                            var extension = await SearchExtensionAsync(dbExtensions, request, cancellationToken);
+                            results.AddRange(extension);
                         }
-
                         return results;
                     }
                 }
                 else
                 {
+                    var rdns = request.BaseObject.RDNs;
+                    if (rdns.Length <= 2 || rdns.Length > 4)
+                    {
+                        return new LdapRequestMessage[0];
+                    }
+
                     //search extensions
-                    throw new NotImplementedException();
+                    IQueryable<Extension> query = context.Extensions;
+
+                    if (rdns.Length >= 3)
+                    {
+                        var eventName = rdns[rdns.Length-3].Values[0].Value;
+                        if (rdns.Length == 3 && request.Scope == SearchScope.BaseObject)
+                        {
+                            //get event
+                            var events = await SearchEventAsync(context.Events.Where(x=>x.Name == eventName), request, cancellationToken);
+                            return events.ToList();
+                        }
+                        query = query.Where(x => x.Event.Name == eventName);
+                    }
+
+                    if (rdns.Length == 4)
+                    {
+                        var extension = rdns[0].Values[0].Value;
+                        query = query.Where(x => x.Number == extension);
+                    }
+
+                    if (_sessions.TryGetValue(connection.Id, out var eventId))
+                    {
+                        query = query.Where(x => x.EventId == eventId);
+                    }
+                    var result = await SearchExtensionAsync(query, request, cancellationToken);
+                    return result;
                 }
             }
         }
 
-        private async Task<OrganizationalUnitObjectClass[]> SearchEvent(Guru3Context context, LdapSearchRequest request, CancellationToken cancellationToken)
+        private async Task<IEnumerable<LdapRequestMessage>> SearchEventAsync(IQueryable<Event> query, LdapSearchRequest request, CancellationToken cancellationToken)
         {
-            var events = context.Events
+            var eventQuery = SearchEvent(query, request);
+            var result = await eventQuery.ToArrayAsync(cancellationToken);
+            var events = result.Select(x => new OrganizationalUnitObjectClass
+            {
+                Ou = {Entries = {x.Name}},
+                Description = String.IsNullOrEmpty(x.Description)
+                    ? null
+                    : new DescriptionAttribute {Entries = {x.Description}},
+                Locality = String.IsNullOrEmpty(x.Location) ? null : new LocalityAttribute {Entries = {x.Location}}
+            }).ToList();
+            var results = new List<LdapRequestMessage>(events.Count);
+            foreach (var item in events)
+            {
+                var attributes = item.GetAttributes(request.Attributes, request.TypesOnly);
+                var dn = new LdapDistinguishedName(item.Ou.Name, item.Ou.Entries[0], RootDN);
+                results.Add(request.Result(dn, attributes, new LdapControl[0]));
+            }
+            return results;
+
+        }
+        private async Task<IEnumerable<LdapRequestMessage>> SearchExtensionAsync(IQueryable<Extension> query, LdapSearchRequest request, CancellationToken cancellationToken)
+        {
+            var extensionQuery = SearchExtension(query, request);
+            var result = await extensionQuery.ToArrayAsync(cancellationToken);
+            var extensions = result.Select(x => new OrganizationalPersonObjectClass
+                {
+                    Parent = new LdapDistinguishedName("ou", x.Event, RootDN),
+                    Cn = {Entries = {x.Number}},
+                    Sn = { Entries = { x.Name}},
+                    Locality = String.IsNullOrEmpty(x.Location) ? null : new LocalityAttribute {Entries = {x.Location}},
+                    TelephoneNumber = new TelephoneNumberAttribute{Entries = { x.Number}}
+                })
+                .ToList();
+            var results = new List<LdapRequestMessage>(extensions.Count);
+            foreach (var item in extensions)
+            {
+                var attributes = item.GetAttributes(request.Attributes, request.TypesOnly);
+                var dn = new LdapDistinguishedName(item.Cn.Name, item.Cn.Entries[0], item.Parent);
+                results.Add(request.Result(dn, attributes, new LdapControl[0]));
+            }
+            return results;
+        }
+
+        private IQueryable<LdapEvent> SearchEvent(IQueryable<Event> events, LdapSearchRequest request)
+        {
+            return events
                 .Select(x => new LdapEvent
                 {
+                    Id = x.Id,
                     Name = x.Name,
                     Description = x.DescriptionDe,
                     Location = x.Location
@@ -125,20 +195,32 @@ namespace eventphone.guru3.ldap
                 .Where(x=>x.Name != null)
                 .Where(FilterEvent(request.Filter));
 
-            var result = await events.ToArrayAsync(cancellationToken);
-            return result.Select(x => new OrganizationalUnitObjectClass
-            {
-                Ou = {Entries = {x.Name}},
-                Description = String.IsNullOrEmpty(x.Description)
-                    ? null
-                    : new DescriptionAttribute {Entries = {x.Description}},
-                Locality = String.IsNullOrEmpty(x.Location) ? null : new LocalityAttribute {Entries = {x.Location}}
-            }).ToArray();
+        }
+
+        private IQueryable<LdapExtension> SearchExtension(IQueryable<Extension> extensions, LdapSearchRequest request)
+        {
+            return extensions
+                .Where(x=>x.InPhonebook)
+                .Select(x => new LdapExtension
+                {
+                    Number = x.Number,
+                    Name = x.Name,
+                    Location = x.Location,
+                    Event = x.Event.Name
+                })
+                .Where(FilterExtension(request.Filter));
         }
 
         private Expression<Func<LdapEvent, bool>> FilterEvent(LdapFilter filter)
         {
             var visitor = new LdapEventFilterVisitor();
+            visitor.Visit(filter);
+            return visitor.Filter;
+        }
+
+        private Expression<Func<LdapExtension, bool>> FilterExtension(LdapFilter filter)
+        {
+            var visitor = new LdapExtensionFilterVisitor();
             visitor.Visit(filter);
             return visitor.Filter;
         }

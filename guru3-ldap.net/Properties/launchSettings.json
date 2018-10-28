@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "guru3-ldap.net": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

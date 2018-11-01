@@ -18,8 +18,8 @@ namespace eventphone.guru3.ldap.DAL
         [MaxLength(128)]
         public string Location { get; set; }
 
-        [Column("start")]
-        public DateTime? Start { get; set; }
+        [Column("registrationStart")]
+        public DateTime? RegistrationStart { get; set; }
 
         [Column("end")]
         public DateTime? End { get; set; }

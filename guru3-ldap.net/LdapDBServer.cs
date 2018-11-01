@@ -51,10 +51,10 @@ namespace eventphone.guru3.ldap
 
             using (var context = new Guru3Context(_connectionString))
             {
-                var exists = await context.Events.Where(x => x.Name == username).Select(x=>x.Id).FirstOrDefaultAsync(connection.CancellationToken);
-                if (exists != default)
+                var eventId = await context.Events.Where(x => x.Name == username).Select(x=>x.Id).FirstOrDefaultAsync(connection.CancellationToken);
+                if (eventId != default)
                 {
-                    _sessions.AddOrUpdate(connection.Id, exists, (x, y) => exists);
+                    _sessions.AddOrUpdate(connection.Id, eventId, (x, y) => eventId);
                     return request.Response();
                 }
                 else
@@ -91,7 +91,7 @@ namespace eventphone.guru3.ldap
                         if (request.Scope == SearchScope.WholeSubtree)
                         {
                             //include extensions
-                            var dbExtensions = SearchEvent(context.Events, request).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
+                            var dbExtensions = SearchEvent(context.Events).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
                             var extension = await SearchExtensionAsync(dbExtensions, request, cancellationToken);
                             results.AddRange(extension);
                         }
@@ -184,7 +184,17 @@ namespace eventphone.guru3.ldap
 
         private IQueryable<LdapEvent> SearchEvent(IQueryable<Event> events, LdapSearchRequest request)
         {
-            return events
+            return SearchEvent(events).Where(FilterEvent(request.Filter));
+        }
+
+        private IQueryable<LdapEvent> SearchEvent(IQueryable<Event> events)
+        {
+            var now = DateTime.Now.Date;
+            var filter = events
+                .Where(x => x.RegistrationStart != null)
+                .Where(x => x.RegistrationStart <= now)
+                .Where(x => x.End != null)
+                .Where(x => x.End > now)
                 .Select(x => new LdapEvent
                 {
                     Id = x.Id,
@@ -192,9 +202,8 @@ namespace eventphone.guru3.ldap
                     Description = x.DescriptionDe,
                     Location = x.Location
                 })
-                .Where(x=>x.Name != null)
-                .Where(FilterEvent(request.Filter));
-
+                .Where(x => x.Name != null);
+            return filter;
         }
 
         private IQueryable<LdapExtension> SearchExtension(IQueryable<Extension> extensions, LdapSearchRequest request)

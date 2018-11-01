@@ -101,7 +101,7 @@ namespace eventphone.guru3.ldap
                 else
                 {
                     var rdns = request.BaseObject.RDNs;
-                    if (rdns.Length <= 2 || rdns.Length > 4)
+                    if (rdns.Count <= 2 || rdns.Count > 4)
                     {
                         return new LdapRequestMessage[0];
                     }
@@ -109,10 +109,10 @@ namespace eventphone.guru3.ldap
                     //search extensions
                     IQueryable<Extension> query = context.Extensions;
 
-                    if (rdns.Length >= 3)
+                    if (rdns.Count >= 3)
                     {
-                        var eventName = rdns[rdns.Length-3].Values[0].Value;
-                        if (rdns.Length == 3 && request.Scope == SearchScope.BaseObject)
+                        var eventName = rdns[rdns.Count-3].Values[0].Value;
+                        if (rdns.Count == 3 && request.Scope == SearchScope.BaseObject)
                         {
                             //get event
                             var events = await SearchEventAsync(context.Events.Where(x=>x.Name == eventName), request, cancellationToken);
@@ -121,7 +121,7 @@ namespace eventphone.guru3.ldap
                         query = query.Where(x => x.Event.Name == eventName);
                     }
 
-                    if (rdns.Length == 4)
+                    if (rdns.Count == 4)
                     {
                         var extension = rdns[0].Values[0].Value;
                         query = query.Where(x => x.Number == extension);

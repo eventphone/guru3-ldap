@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ldap.net\ldap\ldap.csproj" />
+    <ProjectReference Include="..\ldap.net\ldap\ldap.csproj" />
   </ItemGroup>
 
 </Project>

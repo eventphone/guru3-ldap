@@ -58,7 +58,7 @@ namespace eventphone.guru3.ldap
         protected override void VisitEquality(LdapEqualityFilter filter)
         {
             base.VisitEquality(filter);
-            if (filter.Assertion.Attribute.Options.Length > 0)
+            if (filter.Assertion.Attribute.Options.Count > 0)
             {
                 _inner.Push(Expression.Constant(false));
                 return;
@@ -84,7 +84,7 @@ namespace eventphone.guru3.ldap
 
         protected override void VisitGreaterOrEqual(LdapGreaterOrEqualFilter filter)
         {
-            base.VisitGreaterOrEqual(filter);if (filter.Assertion.Attribute.Options.Length > 0)
+            base.VisitGreaterOrEqual(filter);if (filter.Assertion.Attribute.Options.Count > 0)
             {
                 _inner.Push(Expression.Constant(false));
                 return;
@@ -104,7 +104,7 @@ namespace eventphone.guru3.ldap
 
         protected override void VisitLessOrEqual(LdapLessOrEqualFilter filter)
         {
-            base.VisitLessOrEqual(filter);if (filter.Assertion.Attribute.Options.Length > 0)
+            base.VisitLessOrEqual(filter);if (filter.Assertion.Attribute.Options.Count > 0)
             {
                 _inner.Push(Expression.Constant(false));
                 return;
@@ -123,7 +123,7 @@ namespace eventphone.guru3.ldap
 
         protected override void VisitPresent(LdapPresentFilter filter)
         {
-            if (filter.Attribute.Options.Length > 0)
+            if (filter.Attribute.Options.Count > 0)
             {
                 _inner.Push(Expression.Constant(false));
             }
@@ -151,7 +151,7 @@ namespace eventphone.guru3.ldap
         protected override void VisitSubstring(LdapSubstringFilter filter)
         {
             base.VisitSubstring(filter);
-            if (filter.Attribute.Options.Length > 0)
+            if (filter.Attribute.Options.Count > 0)
             {
                 _inner.Push(Expression.Constant(false));
                 return;

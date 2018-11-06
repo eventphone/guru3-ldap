@@ -27,8 +27,9 @@ namespace eventphone.guru3.ldap
 
         protected override void VisitAnd(LdapAndFilter filter)
         {
+            var size = _inner.Count + 1;
             base.VisitAnd(filter);
-            while (_inner.Count > 1)
+            while (_inner.Count > size)
             {
                 _inner.Push(Expression.AndAlso(_inner.Pop(), _inner.Pop()));
             }
@@ -36,8 +37,9 @@ namespace eventphone.guru3.ldap
 
         protected override void VisitOr(LdapOrFilter filter)
         {
+            var size = _inner.Count + 1;
             base.VisitOr(filter);
-            while (_inner.Count > 1)
+            while (_inner.Count > size)
             {
                 _inner.Push(Expression.OrElse(_inner.Pop(), _inner.Pop()));
             }

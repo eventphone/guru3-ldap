@@ -83,9 +83,14 @@ namespace eventphone.guru3.ldap
 
         protected override async Task<IEnumerable<LdapRequestMessage>> OnSearchAsync(LdapSearchRequest request, LdapClientConnection connection, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"search in {request.BaseObject} for {request.Filter} ({request.Scope}) [{connection.Id}]");
+            Console.WriteLine($"search for {request.Filter} in {request.BaseObject} ({request.Scope}) [{connection.Id}]");
             using (var context = new Guru3Context(_connectionString))
             {
+                IQueryable<Event> dbEvents = context.Events;
+                if (_sessions.TryGetValue(connection.Id, out var eventId))
+                {
+                    dbEvents = dbEvents.Where(x => x.Id == eventId);
+                }
                 if (String.Equals(request.BaseObject.ToString(), RootDN.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     if (request.Scope == SearchScope.BaseObject)
@@ -98,13 +103,13 @@ namespace eventphone.guru3.ldap
                     else
                     {
                         //search events
-                        var events = await SearchEventAsync(context.Events, request, cancellationToken);
+                        var events = await SearchEventAsync(dbEvents, request, cancellationToken);
                         var results = events.ToList();
 
                         if (request.Scope == SearchScope.WholeSubtree)
                         {
                             //include extensions
-                            var dbExtensions = SearchEvent(context.Events).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
+                            var dbExtensions = SearchEvent(dbEvents).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
                             var extension = await SearchExtensionAsync(dbExtensions, request, cancellationToken);
                             results.AddRange(extension);
                         }
@@ -120,7 +125,7 @@ namespace eventphone.guru3.ldap
                     }
 
                     //search extensions
-                    IQueryable<Extension> query = SearchEvent(context.Events).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
+                    IQueryable<Extension> query = SearchEvent(dbEvents).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
 
                     if (rdns.Count >= 3)
                     {
@@ -128,7 +133,7 @@ namespace eventphone.guru3.ldap
                         if (rdns.Count == 3 && request.Scope == SearchScope.BaseObject)
                         {
                             //get event
-                            var events = await SearchEventAsync(context.Events.Where(x=>x.Name == eventName), request, cancellationToken);
+                            var events = await SearchEventAsync(dbEvents.Where(x=>x.Name == eventName), request, cancellationToken);
                             return events.ToList();
                         }
                         query = query.Where(x => x.Event.Name == eventName);
@@ -143,7 +148,7 @@ namespace eventphone.guru3.ldap
                         query = query.Where(x => x.Number == extension);
                     }
 
-                    if (_sessions.TryGetValue(connection.Id, out var eventId))
+                    if (_sessions.TryGetValue(connection.Id, out eventId))
                     {
                         query = query.Where(x => x.EventId == eventId);
                     }

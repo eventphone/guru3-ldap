@@ -120,7 +120,7 @@ namespace eventphone.guru3.ldap
                     }
 
                     //search extensions
-                    IQueryable<Extension> query = context.Extensions;
+                    IQueryable<Extension> query = SearchEvent(context.Events).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
 
                     if (rdns.Count >= 3)
                     {

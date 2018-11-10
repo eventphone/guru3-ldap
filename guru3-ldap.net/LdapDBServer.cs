@@ -54,10 +54,14 @@ namespace eventphone.guru3.ldap
 
             var username = request.Name.RDNs.SelectMany(x=>x.Values).Select(x=>x.Value).FirstOrDefault();
             if (String.IsNullOrEmpty(username))
+            {
+                Console.WriteLine($"bind to {request.Name} (anon) [{connection.Id}]");
                 return request.Response();
+            }
 
             using (var context = new Guru3Context(_connectionString))
             {
+                Console.WriteLine($"bind to {request.Name} ({username}) [{connection.Id}]");
                 var eventId = await context.Events.Where(x => x.Name == username).Select(x=>x.Id).FirstOrDefaultAsync(connection.CancellationToken);
                 if (eventId != default)
                 {
@@ -73,11 +77,13 @@ namespace eventphone.guru3.ldap
 
         protected override void OnClientDisconnected(Guid connectionId)
         {
+            Console.WriteLine($"closed [{connectionId}]");
             _sessions.TryRemove(connectionId, out _);
         }
 
         protected override async Task<IEnumerable<LdapRequestMessage>> OnSearchAsync(LdapSearchRequest request, LdapClientConnection connection, CancellationToken cancellationToken)
         {
+            Console.WriteLine($"search in {request.BaseObject} for {request.Filter} ({request.Scope}) [{connection.Id}]");
             using (var context = new Guru3Context(_connectionString))
             {
                 if (String.Equals(request.BaseObject.ToString(), RootDN.ToString(), StringComparison.OrdinalIgnoreCase))
@@ -130,6 +136,9 @@ namespace eventphone.guru3.ldap
 
                     if (rdns.Count == 4)
                     {
+                        if (request.Scope != SearchScope.BaseObject)
+                            return new LdapRequestMessage[0];
+
                         var extension = rdns[0].Values[0].Value;
                         query = query.Where(x => x.Number == extension);
                     }

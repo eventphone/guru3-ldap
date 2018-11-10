@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using eventphone.guru3.ldap.DAL;
@@ -26,6 +27,12 @@ namespace eventphone.guru3.ldap
             _connectionString = connectionString;
         }
 
+        public LdapDBServer(IPEndPoint endPoint, string connectionString)
+            : base(endPoint, GetRootDSE())
+        {
+            _connectionString = connectionString;
+        }
+        
         private static RootDSE _rootDse;
         private static RootDSE GetRootDSE()
         {

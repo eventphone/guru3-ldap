@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,21 @@ namespace eventphone.guru3.ldap
                 .AddJsonFile("appsettings.json")
                 .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
                 .Build();
-            using (var server = new LdapDBServer(configuration.GetValue<ushort>("port"), configuration.GetConnectionString("DefaultConnection")))
+            var listen = configuration.GetValue<string>("address", null);
+            var port = configuration.GetValue<ushort>("port");
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            LdapDBServer server;
+            if (String.IsNullOrEmpty(listen))
+            {
+                server = new LdapDBServer(port, connectionString);
+            }
+            else
+            {
+                var endpoint = new IPEndPoint(IPAddress.Parse(listen), port);
+                server = new LdapDBServer(endpoint, connectionString);
+            }
+            using (server)
             using (var cts = new CancellationTokenSource())
             {
                 Console.CancelKeyPress += (s, e) =>

@@ -14,10 +14,18 @@ namespace eventphone.guru3.ldap.DAL
             _connectionString = connectionString;
         }
 
+        public Guru3Context(DbContextOptions<Guru3Context> options)
+            : base(options)
+        {
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySql(_connectionString)
-                .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning));;
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseMySql(_connectionString)
+                    .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning));
+            }
         }
 
         public DbSet<Event> Events { get; set; }

@@ -14,12 +14,12 @@ using zivillian.ldap.ObjectClasses;
 
 namespace eventphone.guru3.ldap
 {
-    class LdapDBServer:LdapServer
+    public class LdapDBServer:LdapServer
     {
         private static readonly LdapDistinguishedName RootDN = new LdapDistinguishedName("dc=eventphone,dc=de");
 
         private readonly string _connectionString;
-        private readonly ConcurrentDictionary<Guid, int> _sessions = new ConcurrentDictionary<Guid, int>();
+        protected readonly ConcurrentDictionary<Guid, int> Sessions = new ConcurrentDictionary<Guid, int>();
         
         public LdapDBServer(ushort port, string connectionString)
             : base(port, GetRootDSE())
@@ -59,13 +59,13 @@ namespace eventphone.guru3.ldap
                 return request.Response();
             }
 
-            using (var context = new Guru3Context(_connectionString))
+            using (var context = GetContext())
             {
                 Console.WriteLine($"bind to {request.Name} ({username}) [{connection.Id}]");
                 var eventId = await context.Events.Where(x => x.Name == username).Select(x=>x.Id).FirstOrDefaultAsync(connection.CancellationToken);
                 if (eventId != default)
                 {
-                    _sessions.AddOrUpdate(connection.Id, eventId, (x, y) => eventId);
+                    Sessions.AddOrUpdate(connection.Id, eventId, (x, y) => eventId);
                     return request.Response();
                 }
                 else
@@ -78,16 +78,16 @@ namespace eventphone.guru3.ldap
         protected override void OnClientDisconnected(Guid connectionId)
         {
             Console.WriteLine($"closed [{connectionId}]");
-            _sessions.TryRemove(connectionId, out _);
+            Sessions.TryRemove(connectionId, out _);
         }
 
         protected override async Task<IEnumerable<LdapRequestMessage>> OnSearchAsync(LdapSearchRequest request, LdapClientConnection connection, CancellationToken cancellationToken)
         {
             Console.WriteLine($"search for {request.Filter} in {request.BaseObject} ({request.Scope}) [{connection.Id}]");
-            using (var context = new Guru3Context(_connectionString))
+            using (var context = GetContext())
             {
                 IQueryable<Event> dbEvents = context.Events;
-                if (_sessions.TryGetValue(connection.Id, out var eventId))
+                if (Sessions.TryGetValue(connection.Id, out var eventId))
                 {
                     dbEvents = dbEvents.Where(x => x.Id == eventId);
                 }
@@ -148,7 +148,7 @@ namespace eventphone.guru3.ldap
                         query = query.Where(x => x.Number == extension);
                     }
 
-                    if (_sessions.TryGetValue(connection.Id, out eventId))
+                    if (Sessions.TryGetValue(connection.Id, out eventId))
                     {
                         query = query.Where(x => x.EventId == eventId);
                     }
@@ -156,6 +156,11 @@ namespace eventphone.guru3.ldap
                     return result;
                 }
             }
+        }
+
+        protected virtual Guru3Context GetContext()
+        {
+            return new Guru3Context(_connectionString);
         }
 
         private async Task<IEnumerable<LdapRequestMessage>> SearchEventAsync(IQueryable<Event> query, LdapSearchRequest request, CancellationToken cancellationToken)

@@ -100,6 +100,43 @@ namespace guru3_ldap.test
                 Name = "POC Hotline",
                 Number = "2000"
             });
+            
+            context.Extensions.Add(new Extension
+            {
+                Id = 9,
+                EventId = 1,
+                InPhonebook = true,
+                Location = "CERT",
+                Name = "CERT",
+                Number = "112"
+            });
+            context.Extensions.Add(new Extension
+            {
+                Id = 10,
+                EventId = 2,
+                InPhonebook = true,
+                Location = "CERT",
+                Name = "CERT",
+                Number = "112"
+            });
+            context.Extensions.Add(new Extension
+            {
+                Id = 11,
+                EventId = 3,
+                InPhonebook = true,
+                Location = "CERT",
+                Name = "CÄRT",
+                Number = "112"
+            });
+            context.Extensions.Add(new Extension
+            {
+                Id = 12,
+                EventId = 4,
+                InPhonebook = true,
+                Location = "CERT",
+                Name = "CERT",
+                Number = "112"
+            });
         }
 
         private void AddEvents(Guru3Context context)

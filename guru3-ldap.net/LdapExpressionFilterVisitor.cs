@@ -1,13 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using zivillian.ldap;
 
 namespace eventphone.guru3.ldap
 {
-    public abstract class LdapExpressionFilterVisitor<T> : LdapFilterVisitor
+    public abstract class LdapFilterDBVisitor : LdapFilterVisitor
+    {
+        protected static readonly MethodInfo LikeFunction = typeof(DbFunctionsExtensions).GetMethod(nameof(DbFunctionsExtensions.Like),
+            new[] {typeof(DbFunctions), typeof(string), typeof(string)});
+
+        protected static readonly MethodInfo IsNullOrEmptyFunction = typeof(String).GetMethod(nameof(String.IsNullOrEmpty));
+    }
+
+    public abstract class LdapExpressionFilterVisitor<T> : LdapFilterDBVisitor
     {
         public Expression<Func<T, bool>> Filter { get; private set; }
 
@@ -144,7 +153,7 @@ namespace eventphone.guru3.ldap
                     }
                     else
                     {
-                        _inner.Push(Expression.NotEqual(property, Expression.Constant(null)));
+                        _inner.Push(Expression.Not(Expression.Call(null, IsNullOrEmptyFunction, property)));
                     }
                     break;
             }
@@ -185,10 +194,8 @@ namespace eventphone.guru3.ldap
                 var value = Encoding.UTF8.GetString(filter.EndsWith.Value.Span);
                 like.Append(value);
             }
-            var method = typeof(DbFunctionsExtensions).GetMethod(nameof(DbFunctionsExtensions.Like),
-                new[] {typeof(DbFunctions), typeof(string), typeof(string)});
 
-            _inner.Push(Expression.Call(null, method, Expression.Constant(null, typeof(DbFunctions)), property, Expression.Constant(like.ToString())));
+            _inner.Push(Expression.Call(null, LikeFunction, Expression.Constant(null, typeof(DbFunctions)), property, Expression.Constant(like.ToString())));
         }
 
         protected abstract MemberExpression GetProperty(string name);

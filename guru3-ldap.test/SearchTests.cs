@@ -9,15 +9,15 @@ namespace guru3_ldap.test
     public class SearchTests : LdapDBServerTests
     {
         [Theory]
-        [InlineData("", "dc=eventphone,dc=de", 6+1+1)]
+        [InlineData("", "dc=eventphone,dc=de", 7+1+1)]
         [InlineData("cn=34c3", "dc=eventphone,dc=de")]
-        [InlineData("cn=current", "dc=eventphone,dc=de", 3+1)]
+        [InlineData("cn=current", "dc=eventphone,dc=de", 4+1)]
         [InlineData("cn=ümläut", "dc=eventphone,dc=de", 3+1)]
         [InlineData("cn=future", "dc=eventphone,dc=de")]
 
-        [InlineData("", "ou=current,dc=eventphone,dc=de", 3)]
+        [InlineData("", "ou=current,dc=eventphone,dc=de", 4)]
         [InlineData("cn=34c3", "ou=current,dc=eventphone,dc=de")]
-        [InlineData("cn=current", "ou=current,dc=eventphone,dc=de", 3)]
+        [InlineData("cn=current", "ou=current,dc=eventphone,dc=de", 4)]
         [InlineData("cn=ümläut", "ou=current,dc=eventphone,dc=de")]
         [InlineData("cn=future", "ou=current,dc=eventphone,dc=de")]
 
@@ -233,6 +233,19 @@ namespace guru3_ldap.test
             var search = await Search(String.Empty, "dc=eventphone,dc=de", "(ou=current)", nameof(CanSearchEvent));
             var result = Assert.Single(search);
             Assert.Equal("ou=current,dc=eventphone,dc=de", result.ObjectName.ToString());
+        }
+
+        [Fact]
+        public async Task CanSearchLocationPresent()
+        {
+            var search = await Search(String.Empty, "dc=eventphone,dc=de", "(l=*)", nameof(CanSearchLocationPresent));
+            var results = search.ToArray();
+            Assert.NotEmpty(results);
+            foreach (var entry in results)
+            {
+                var attr = entry.Attributes.Where(x => x.Type.Oid == "l").SelectMany(x => x.Values);
+                Assert.Single(attr);
+            }
         }
 
         private async Task<LdapSearchResultEntry[]> Search(string username, string baseDN, string filter, string testname)

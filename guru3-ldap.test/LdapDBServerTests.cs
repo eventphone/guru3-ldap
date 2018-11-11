@@ -137,6 +137,16 @@ namespace guru3_ldap.test
                 Name = "CERT",
                 Number = "112"
             });
+
+            context.Extensions.Add(new Extension
+            {
+                Id = 13,
+                EventId = 2,
+                InPhonebook = true,
+                Location = "",
+                Name = "Foo",
+                Number = "4444"
+            });
         }
 
         private void AddEvents(Guru3Context context)

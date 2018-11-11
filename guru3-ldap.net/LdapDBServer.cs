@@ -111,6 +111,8 @@ namespace eventphone.guru3.ldap
                             //include extensions
                             var dbExtensions = SearchEvent(dbEvents).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
                             var extension = await SearchExtensionAsync(dbExtensions, request, cancellationToken);
+                            if (request.SizeLimit > 0)
+                                extension = extension.Take(request.SizeLimit - results.Count);
                             results.AddRange(extension);
                         }
                         return results;
@@ -166,6 +168,8 @@ namespace eventphone.guru3.ldap
         private async Task<IEnumerable<LdapRequestMessage>> SearchEventAsync(IQueryable<Event> query, LdapSearchRequest request, CancellationToken cancellationToken)
         {
             var eventQuery = SearchEvent(query, request);
+            if (request.SizeLimit > 0)
+                eventQuery = eventQuery.Take(request.SizeLimit);
             var result = await eventQuery.ToArrayAsync(cancellationToken);
             var events = result.Select(x => new OrganizationalUnitObjectClass
             {
@@ -188,6 +192,8 @@ namespace eventphone.guru3.ldap
         private async Task<IEnumerable<LdapRequestMessage>> SearchExtensionAsync(IQueryable<Extension> query, LdapSearchRequest request, CancellationToken cancellationToken)
         {
             var extensionQuery = SearchExtension(query, request);
+            if (request.SizeLimit > 0)
+                extensionQuery = extensionQuery.Take(request.SizeLimit);
             var result = await extensionQuery.ToArrayAsync(cancellationToken);
             var extensions = result.Select(x => new OrganizationalPersonObjectClass
                 {

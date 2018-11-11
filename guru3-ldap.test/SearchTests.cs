@@ -210,6 +210,31 @@ namespace guru3_ldap.test
             }
         }
 
+        [Theory]
+        [InlineData("(objectclass=*)", SearchScope.WholeSubtree, 5)]
+        [InlineData("(objectclass=*)", SearchScope.SingleLevel, 1)]
+        [InlineData("(l=PoC)", SearchScope.WholeSubtree, 3)]
+        [InlineData("(|(l=PoC)(ou=*ture)(l=some*))", SearchScope.WholeSubtree, 5)]
+        [InlineData("(l=*)", SearchScope.WholeSubtree, 2)]
+        public async Task SearchRespectsLimit(string filter, SearchScope scope, int sizeLimit)
+        {
+            using (var server = GetServer($"{nameof(SearchRespectsLimit)}_{filter}_{scope}"))
+            {
+                await server.Bind(String.Empty, String.Empty);
+                var search = await server.Search("dc=eventphone,dc=de", filter, scope, sizeLimit);
+                var results = search.ToArray();
+                Assert.True(results.Length <= sizeLimit);
+            }
+        }
+
+        [Fact]
+        public async Task CanSearchEvent()
+        {
+            var search = await Search(String.Empty, "dc=eventphone,dc=de", "(ou=current)", nameof(CanSearchEvent));
+            var result = Assert.Single(search);
+            Assert.Equal("ou=current,dc=eventphone,dc=de", result.ObjectName.ToString());
+        }
+
         private async Task<LdapSearchResultEntry[]> Search(string username, string baseDN, string filter, string testname)
         {
             using (var server = GetServer(testname))

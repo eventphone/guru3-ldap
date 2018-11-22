@@ -97,7 +97,7 @@ namespace eventphone.guru3.ldap
                     {
                         //search root
                         var attributes = GetRootDSE().GetAttributes(request.Attributes, request.TypesOnly);
-                        var result = request.Result(RootDN, attributes, new LdapControl[0]);
+                        var result = request.Result(RootDN, attributes.ToArray(), new LdapControl[0]);
                         return new[] {result};
                     }
                     else
@@ -184,7 +184,7 @@ namespace eventphone.guru3.ldap
             {
                 var attributes = item.GetAttributes(request.Attributes, request.TypesOnly);
                 var dn = new LdapDistinguishedName(item.Ou.Name, item.Ou.Entries[0], RootDN);
-                results.Add(request.Result(dn, attributes, new LdapControl[0]));
+                results.Add(request.Result(dn, attributes.ToArray(), new LdapControl[0]));
             }
             return results;
 
@@ -209,7 +209,7 @@ namespace eventphone.guru3.ldap
             {
                 var attributes = item.GetAttributes(request.Attributes, request.TypesOnly);
                 var dn = new LdapDistinguishedName(item.Cn.Name, item.Cn.Entries[0], item.Parent);
-                results.Add(request.Result(dn, attributes, new LdapControl[0]));
+                results.Add(request.Result(dn, attributes.ToArray(), new LdapControl[0]));
             }
             return results;
         }

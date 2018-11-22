@@ -194,7 +194,7 @@ namespace guru3_ldap.test
                 : base(389, null)
             {
                 _contextOptions = context;
-                _connection = new LdapClientConnection(null, null, null, new CancellationTokenSource());
+                _connection = new LdapClientConnection(null, null, new CancellationTokenSource());
             }
 
             protected override Guru3Context GetContext()

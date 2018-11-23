@@ -52,6 +52,7 @@ namespace eventphone.guru3.ldap
                     server.UseSsl(options);
                 }
             }
+            server.AdminToken = configuration.GetValue<string>("token", null);
             using (server)
             using (var cts = new CancellationTokenSource())
             {

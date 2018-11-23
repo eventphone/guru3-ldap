@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using eventphone.guru3.ldap.DAL;
@@ -20,6 +21,7 @@ namespace eventphone.guru3.ldap
 
         private readonly string _connectionString;
         protected readonly ConcurrentDictionary<Guid, int> Sessions = new ConcurrentDictionary<Guid, int>();
+        private readonly ConcurrentDictionary<Guid, bool> _admins = new ConcurrentDictionary<Guid, bool>();
         
         public LdapDBServer(ushort port, string connectionString)
             : base(port, GetRootDSE())
@@ -33,6 +35,8 @@ namespace eventphone.guru3.ldap
             _connectionString = connectionString;
         }
         
+        public string AdminToken { get; set; }
+
         private static RootDSE _rootDse;
         private static RootDSE GetRootDSE()
         {
@@ -66,6 +70,12 @@ namespace eventphone.guru3.ldap
                 if (eventId != default)
                 {
                     Sessions.AddOrUpdate(connection.Id, eventId, (x, y) => eventId);
+                    if (!String.IsNullOrEmpty(AdminToken))
+                    {
+                        var pass = Encoding.UTF8.GetString(request.Simple.Value.Span);
+                        if (pass == AdminToken)
+                            _admins.AddOrUpdate(connection.Id, true, (x, y) => true);
+                    }
                     return request.Response();
                 }
                 else
@@ -79,6 +89,7 @@ namespace eventphone.guru3.ldap
         {
             Console.WriteLine($"closed [{connectionId}]");
             Sessions.TryRemove(connectionId, out _);
+            _admins.TryRemove(connectionId, out _);
         }
 
         protected override async Task<IEnumerable<LdapRequestMessage>> OnSearchAsync(LdapSearchRequest request, LdapClientConnection connection, CancellationToken cancellationToken)
@@ -103,13 +114,13 @@ namespace eventphone.guru3.ldap
                     else
                     {
                         //search events
-                        var events = await SearchEventAsync(dbEvents, request, cancellationToken);
+                        var events = await SearchEventAsync(dbEvents, request, connection, cancellationToken);
                         var results = events.ToList();
 
                         if (request.Scope == SearchScope.WholeSubtree)
                         {
                             //include extensions
-                            var dbExtensions = SearchEvent(dbEvents).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
+                            var dbExtensions = SearchEvent(dbEvents, connection).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
                             var extension = await SearchExtensionAsync(dbExtensions, request, cancellationToken);
                             if (request.SizeLimit > 0)
                                 extension = extension.Take(request.SizeLimit - results.Count);
@@ -127,7 +138,7 @@ namespace eventphone.guru3.ldap
                     }
 
                     //search extensions
-                    IQueryable<Extension> query = SearchEvent(dbEvents).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
+                    IQueryable<Extension> query = SearchEvent(dbEvents, connection).Join(context.Extensions, x => x.Id, x => x.EventId, (x, y) => y);
 
                     if (rdns.Count >= 3)
                     {
@@ -135,7 +146,7 @@ namespace eventphone.guru3.ldap
                         if (rdns.Count == 3 && request.Scope == SearchScope.BaseObject)
                         {
                             //get event
-                            var events = await SearchEventAsync(dbEvents.Where(x=>x.Name == eventName), request, cancellationToken);
+                            var events = await SearchEventAsync(dbEvents.Where(x=>x.Name == eventName), request, connection, cancellationToken);
                             return events.ToList();
                         }
                         query = query.Where(x => x.Event.Name == eventName);
@@ -165,9 +176,9 @@ namespace eventphone.guru3.ldap
             return new Guru3Context(_connectionString);
         }
 
-        private async Task<IEnumerable<LdapRequestMessage>> SearchEventAsync(IQueryable<Event> query, LdapSearchRequest request, CancellationToken cancellationToken)
+        private async Task<IEnumerable<LdapRequestMessage>> SearchEventAsync(IQueryable<Event> query, LdapSearchRequest request, LdapClientConnection connection, CancellationToken cancellationToken)
         {
-            var eventQuery = SearchEvent(query, request);
+            var eventQuery = SearchEvent(query, request, connection);
             if (request.SizeLimit > 0)
                 eventQuery = eventQuery.Take(request.SizeLimit);
             var result = await eventQuery.ToArrayAsync(cancellationToken);
@@ -189,6 +200,7 @@ namespace eventphone.guru3.ldap
             return results;
 
         }
+
         private async Task<IEnumerable<LdapRequestMessage>> SearchExtensionAsync(IQueryable<Extension> query, LdapSearchRequest request, CancellationToken cancellationToken)
         {
             var extensionQuery = SearchExtension(query, request);
@@ -214,19 +226,23 @@ namespace eventphone.guru3.ldap
             return results;
         }
 
-        private IQueryable<LdapEvent> SearchEvent(IQueryable<Event> events, LdapSearchRequest request)
+        private IQueryable<LdapEvent> SearchEvent(IQueryable<Event> events, LdapSearchRequest request, LdapClientConnection connection)
         {
-            return SearchEvent(events).Where(FilterEvent(request.Filter));
+            return SearchEvent(events, connection).Where(FilterEvent(request.Filter));
         }
 
-        private IQueryable<LdapEvent> SearchEvent(IQueryable<Event> events)
+        private IQueryable<LdapEvent> SearchEvent(IQueryable<Event> events, LdapClientConnection connection)
         {
             var now = DateTime.Now.Date;
+            if (!_admins.ContainsKey(connection.Id))
+            {
+                events = events
+                    .Where(x => x.RegistrationStart != null)
+                    .Where(x => x.RegistrationStart <= now)
+                    .Where(x => x.End != null)
+                    .Where(x => x.End > now);
+            }
             var filter = events
-                .Where(x => x.RegistrationStart != null)
-                .Where(x => x.RegistrationStart <= now)
-                .Where(x => x.End != null)
-                .Where(x => x.End > now)
                 .Select(x => new LdapEvent
                 {
                     Id = x.Id,

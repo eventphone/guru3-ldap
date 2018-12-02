@@ -48,39 +48,42 @@ namespace eventphone.guru3.ldap
                 O = {Entries = {domain}},
                 Dc = {Entries = {RootDN.RDNs[0].Values[0].Value}},
                 NamingContexts = new NamingContextsAttribute{Entries = {RootDN}},
+                SupportedSASLMechanisms = new SupportedSASLMechanismsAttribute{Entries = { "PLAIN", "ANOMYMOUS"}}
             };
         }
 
-        protected override async Task<LdapBindResponse> OnBindAsync(LdapBindRequest request, LdapClientConnection connection)
+        protected override Task<ResultCode> OnBindAsync(LdapDistinguishedName bindDN, ReadOnlyMemory<byte> password, LdapClientConnection connection)
         {
-            if (request.Simple == null)
-                return request.Response(ResultCode.AuthMethodNotSupported, "only simple bind");
+            var username = bindDN.RDNs.SelectMany(x=>x.Values).Select(x=>x.Value).FirstOrDefault();
+            return OnSaslBindAsync(bindDN, username, password, connection);
+        }
 
-            var username = request.Name.RDNs.SelectMany(x=>x.Values).Select(x=>x.Value).FirstOrDefault();
+        protected override async Task<ResultCode> OnSaslBindAsync(LdapDistinguishedName bindDN, string username, ReadOnlyMemory<byte> password, LdapClientConnection connection)
+        {
             if (String.IsNullOrEmpty(username))
             {
-                Console.WriteLine($"bind to {request.Name} (anon) [{connection.Id}]");
-                return request.Response();
+                Console.WriteLine($"bind to {bindDN} (anon) [{connection.Id}]");
+                return ResultCode.Success;
             }
 
             using (var context = GetContext())
             {
-                Console.WriteLine($"bind to {request.Name} ({username}) [{connection.Id}]");
+                Console.WriteLine($"bind to {bindDN} ({username}) [{connection.Id}]");
                 var eventId = await context.Events.Where(x => x.Name == username).Select(x=>x.Id).FirstOrDefaultAsync(connection.CancellationToken);
                 if (eventId != default)
                 {
                     Sessions.AddOrUpdate(connection.Id, eventId, (x, y) => eventId);
                     if (!String.IsNullOrEmpty(AdminToken))
                     {
-                        var pass = Encoding.UTF8.GetString(request.Simple.Value.Span);
+                        var pass = Encoding.UTF8.GetString(password.Span);
                         if (pass == AdminToken)
                             _admins.AddOrUpdate(connection.Id, true, (x, y) => true);
                     }
-                    return request.Response();
+                    return ResultCode.Success;
                 }
                 else
                 {
-                    return request.Response(ResultCode.InvalidCredentials, "specified Event does not exist");
+                    return ResultCode.InvalidCredentials;
                 }
             }
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using eventphone.guru3.ldap;
@@ -211,10 +212,16 @@ namespace guru3_ldap.test
                 }
             }
 
-            public Task<LdapBindResponse> Bind(string username, string password)
+            public Task<ResultCode> Bind(string username, string password)
             {
                 var request = new LdapBindRequest(1, username, password, new LdapControl[0]);
-                return OnBindAsync(request, _connection);
+                return OnBindAsync(request.Name, request.Simple.Value, _connection);
+            }
+
+            public Task<ResultCode> BindSaslPlain(string dn, string username, string password)
+            {
+                return OnSaslBindAsync(new LdapDistinguishedName(dn), username, Encoding.UTF8.GetBytes(password),
+                    _connection);
             }
 
             public Task<IEnumerable<LdapRequestMessage>> Search(string baseDN, string filter, SearchScope scope)

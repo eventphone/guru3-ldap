@@ -253,7 +253,7 @@ namespace guru3_ldap.test
             using (var server = GetServer(testname))
             {
                 var bind = await server.Bind(username, String.Empty);
-                Assert.Equal(ResultCode.Success, bind.ResultCode);
+                Assert.Equal(ResultCode.Success, bind);
                 var search = await server.Search(baseDN, filter, SearchScope.WholeSubtree);
                 return search.OfType<LdapSearchResultEntry>().ToArray();
             }

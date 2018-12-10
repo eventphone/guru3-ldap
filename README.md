@@ -12,4 +12,4 @@ We want to support the LDAP Phonebook feature of many SIP Phone and also the Mit
 
 ## I found a bug!
 
-Please open an [issue](https://github.com/eventphone/guru3-ldap/issues/new). If you've found a security issue please contact us via [twitter](https://twitter.com/eventphone) or meet us at the POC desk (during an event).
+Please open an [issue](https://github.com/eventphone/guru3-ldap/issues/new). If you've found a security issue please contact us via our [ticket system](https://guru3.eventphone.de/support/) or meet us at the POC desk (during an event).

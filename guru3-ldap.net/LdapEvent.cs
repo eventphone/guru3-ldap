@@ -1,4 +1,6 @@
-﻿namespace eventphone.guru3.ldap
+﻿using System;
+
+namespace eventphone.guru3.ldap
 {
     public class LdapEvent
     {
@@ -20,5 +22,7 @@
         public string Location { get; set; }
 
         public string Event { get; set; }
+        
+        public DateTimeOffset LastModified { get; set; }
     }
 }

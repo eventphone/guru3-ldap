@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace eventphone.guru3.ldap.DAL
 {
@@ -25,5 +26,8 @@ namespace eventphone.guru3.ldap.DAL
 
         [ForeignKey(nameof(EventId))]
         public Event Event { get; set; }
+
+        [Column("lastChanged")]
+        public DateTimeOffset LastChanged { get; set; }
     }
 }

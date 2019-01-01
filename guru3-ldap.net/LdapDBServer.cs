@@ -217,7 +217,10 @@ namespace eventphone.guru3.ldap
                     Cn = {Entries = {x.Number}},
                     Sn = { Entries = { String.IsNullOrEmpty(x.Name)?x.Number:x.Name}},
                     Locality = String.IsNullOrEmpty(x.Location) ? null : new LocalityAttribute {Entries = {x.Location}},
-                    TelephoneNumber = new TelephoneNumberAttribute{Entries = { x.Number}}
+                    TelephoneNumber = new TelephoneNumberAttribute{Entries = { x.Number}},
+                    CreatorsName = new CreatorsNameAttribute{Entries = { new LdapDistinguishedName("cn", "GURU3", RootDN)}},
+                    ModifiersName = new ModifiersNameAttribute{Entries = { new LdapDistinguishedName("cn", "GURU3", RootDN)}},
+                    ModifyTimestamp = new ModifyTimestampAttribute{Entries = { x.LastModified}},
                 })
                 .ToList();
             var results = new List<LdapRequestMessage>(extensions.Count);
@@ -268,7 +271,8 @@ namespace eventphone.guru3.ldap
                     Number = x.Number,
                     Name = x.Name,
                     Location = x.Location,
-                    Event = x.Event.Name
+                    Event = x.Event.Name,
+                    LastModified = x.LastChanged
                 })
                 .Where(FilterExtension(request.Filter));
         }

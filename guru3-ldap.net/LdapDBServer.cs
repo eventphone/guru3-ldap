@@ -47,8 +47,9 @@ namespace eventphone.guru3.ldap
             {
                 O = {Entries = {domain}},
                 Dc = {Entries = {RootDN.RDNs[0].Values[0].Value}},
-                NamingContexts = new NamingContextsAttribute{Entries = {RootDN}},
-                SupportedSASLMechanisms = new SupportedSASLMechanismsAttribute{Entries = { "PLAIN", "ANOMYMOUS"}}
+                NamingContexts = new NamingContextsAttribute {Entries = {RootDN}},
+                SupportedSASLMechanisms = new SupportedSASLMechanismsAttribute {Entries = {"PLAIN", "ANOMYMOUS"}},
+                SupportedFeatures = new SupportedFeaturesAttribute {Entries = {"1.3.6.1.4.1.4203.1.5.1"}}
             };
         }
 

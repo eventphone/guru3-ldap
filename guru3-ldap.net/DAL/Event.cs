@@ -26,5 +26,8 @@ namespace eventphone.guru3.ldap.DAL
 
         [Column("descriptionDE")]
         public string DescriptionDe { get; set; }
+
+        [Column("isPermanentAndPublic")]
+        public bool IsPermanentAndPublic { get; set; }
     }
 }

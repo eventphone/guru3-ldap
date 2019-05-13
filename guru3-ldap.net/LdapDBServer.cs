@@ -244,10 +244,10 @@ namespace eventphone.guru3.ldap
             if (!_admins.ContainsKey(connection.Id))
             {
                 events = events
-                    .Where(x => x.RegistrationStart != null)
-                    .Where(x => x.RegistrationStart <= now)
-                    .Where(x => x.End != null)
-                    .Where(x => x.End > now);
+                    .Where(x => x.RegistrationStart != null || x.IsPermanentAndPublic)
+                    .Where(x => x.RegistrationStart <= now || x.IsPermanentAndPublic)
+                    .Where(x => x.End != null || x.IsPermanentAndPublic)
+                    .Where(x => x.End > now || x.IsPermanentAndPublic);
             }
             var filter = events
                 .Select(x => new LdapEvent

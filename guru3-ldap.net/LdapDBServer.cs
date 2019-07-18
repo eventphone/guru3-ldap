@@ -215,12 +215,13 @@ namespace eventphone.guru3.ldap
                 {
                     Parent = new LdapDistinguishedName("ou", x.Event, RootDN),
                     Cn = {Entries = {x.Number}},
-                    Sn = { Entries = { String.IsNullOrEmpty(x.Name)?x.Number:x.Name}},
+                    Sn = {Entries = {String.IsNullOrEmpty(x.Name) ? x.Number : x.Name}},
                     Locality = String.IsNullOrEmpty(x.Location) ? null : new LocalityAttribute {Entries = {x.Location}},
-                    TelephoneNumber = new TelephoneNumberAttribute{Entries = { x.Number}},
-                    CreatorsName = new CreatorsNameAttribute{Entries = { new LdapDistinguishedName("cn", "GURU3", RootDN)}},
-                    ModifiersName = new ModifiersNameAttribute{Entries = { new LdapDistinguishedName("cn", "GURU3", RootDN)}},
-                    ModifyTimestamp = new ModifyTimestampAttribute{Entries = { x.LastModified}},
+                    OrganizationalUnitName = new OuAttribute {Entries = {x.Event}},
+                    TelephoneNumber = new TelephoneNumberAttribute {Entries = {x.Number}},
+                    CreatorsName = new CreatorsNameAttribute {Entries = {new LdapDistinguishedName("cn", "GURU3", RootDN)}},
+                    ModifiersName = new ModifiersNameAttribute {Entries = {new LdapDistinguishedName("cn", "GURU3", RootDN)}},
+                    ModifyTimestamp = new ModifyTimestampAttribute {Entries = {x.LastModified}},
                 })
                 .ToList();
             var results = new List<LdapRequestMessage>(extensions.Count);

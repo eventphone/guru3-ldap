@@ -19,6 +19,9 @@ namespace eventphone.guru3.ldap
                 case "l":
                 case "2.5.4.7":
                     return Expression.Property(ExpressionParameter, typeof(LdapExtension).GetProperty(nameof(LdapExtension.Location)));
+                case "ou":
+                case "2.5.4.11":
+                    return Expression.Property(ExpressionParameter, typeof(LdapExtension).GetProperty(nameof(LdapExtension.Event)));
                 default:
                     return null;
             }

@@ -228,11 +228,26 @@ namespace guru3_ldap.test
         }
 
         [Fact]
+        public async Task CanSearchNotEvent()
+        {
+            var search = await Search(String.Empty, "dc=eventphone,dc=de", "(&(!(ou=current))(telephoneNumber=4502))", nameof(CanSearchEvent));
+            var result = Assert.Single(search);
+            Assert.NotEqual("cn=4502,ou=current,dc=eventphone,dc=de", result.ObjectName.ToString());
+        }
+
+        [Fact]
+        public async Task CanSearchEventExtension()
+        {
+            var search = await Search(String.Empty, "dc=eventphone,dc=de", "(&(ou=current)(telephoneNumber=4502))", nameof(CanSearchEvent));
+            var result = Assert.Single(search);
+            Assert.Equal("cn=4502,ou=current,dc=eventphone,dc=de", result.ObjectName.ToString());
+        }
+
+        [Fact]
         public async Task CanSearchEvent()
         {
             var search = await Search(String.Empty, "dc=eventphone,dc=de", "(ou=current)", nameof(CanSearchEvent));
-            var result = Assert.Single(search);
-            Assert.Equal("ou=current,dc=eventphone,dc=de", result.ObjectName.ToString());
+            Assert.Contains(search, x =>x.ObjectName.ToString() == "ou=current,dc=eventphone,dc=de");
         }
 
         [Fact]

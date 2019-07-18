@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using eventphone.guru3.ldap;
 using eventphone.guru3.ldap.DAL;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using zivillian.ldap;
 
 namespace guru3_ldap.test
@@ -14,8 +15,13 @@ namespace guru3_ldap.test
     {
         protected TestLdapServer GetServer(string name)
         {
+            var serviceProvider = new ServiceCollection()
+                .AddEntityFrameworkInMemoryDatabase()
+                .BuildServiceProvider();
+
             var options = new DbContextOptionsBuilder<Guru3Context>()
                 .UseInMemoryDatabase(databaseName: name)
+                .UseInternalServiceProvider(serviceProvider)
                 .Options;
             using (var context = new Guru3Context(options))
             {

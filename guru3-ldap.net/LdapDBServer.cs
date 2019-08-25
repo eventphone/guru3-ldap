@@ -248,7 +248,7 @@ namespace eventphone.guru3.ldap
                     .Where(x => x.RegistrationStart != null || x.IsPermanentAndPublic)
                     .Where(x => x.RegistrationStart <= now || x.IsPermanentAndPublic)
                     .Where(x => x.End != null || x.IsPermanentAndPublic)
-                    .Where(x => x.End > now || x.IsPermanentAndPublic);
+                    .Where(x => x.End >= now || x.IsPermanentAndPublic);
             }
             var filter = events
                 .Select(x => new LdapEvent

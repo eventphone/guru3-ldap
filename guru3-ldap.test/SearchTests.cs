@@ -263,6 +263,14 @@ namespace guru3_ldap.test
             }
         }
 
+        [Fact]
+        public async Task CanSearchGreater()
+        {
+            var search = await Search(String.Empty, "dc=eventphone,dc=de", "(sn>=0)", nameof(CanSearchGreater));
+            var results = search.ToArray();
+            Assert.NotEmpty(results);
+        }
+
         private async Task<LdapSearchResultEntry[]> Search(string username, string baseDN, string filter, string testname)
         {
             using (var server = GetServer(testname))

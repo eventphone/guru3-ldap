@@ -14,13 +14,15 @@ namespace eventphone.guru3.ldap
             new[] {typeof(DbFunctions), typeof(string), typeof(string)});
 
         protected static readonly MethodInfo IsNullOrEmptyFunction = typeof(String).GetMethod(nameof(String.IsNullOrEmpty));
+
+        protected static readonly MethodInfo _stringCompare = typeof(string).GetRuntimeMethod(nameof(string.Compare), new[] { typeof(string), typeof(string) });
     }
 
     public abstract class LdapExpressionFilterVisitor<T> : LdapFilterDBVisitor
     {
         public Expression<Func<T, bool>> Filter { get; private set; }
 
-        private Stack<Expression> _inner = new Stack<Expression>();
+        private readonly Stack<Expression> _inner = new Stack<Expression>();
         protected readonly ParameterExpression ExpressionParameter;
 
         public LdapExpressionFilterVisitor()
@@ -95,7 +97,8 @@ namespace eventphone.guru3.ldap
 
         protected override void VisitGreaterOrEqual(LdapGreaterOrEqualFilter filter)
         {
-            base.VisitGreaterOrEqual(filter);if (filter.Assertion.Attribute.Options.Count > 0)
+            base.VisitGreaterOrEqual(filter);
+            if (filter.Assertion.Attribute.Options.Count > 0)
             {
                 _inner.Push(Expression.Constant(false));
                 return;
@@ -110,12 +113,18 @@ namespace eventphone.guru3.ldap
             }
             
             var value = Encoding.UTF8.GetString(filter.Assertion.Value.Span);
-            _inner.Push(Expression.GreaterThanOrEqual(property, Expression.Constant(value)));
+            if (!property.Type.IsAssignableFrom(typeof(string)))
+            {
+                throw new NotImplementedException("we have only string properties");
+            }
+            var compare = Expression.Call(null, _stringCompare, property, Expression.Constant(value));
+            _inner.Push(Expression.GreaterThanOrEqual(compare, Expression.Constant(0)));
         }
 
         protected override void VisitLessOrEqual(LdapLessOrEqualFilter filter)
         {
-            base.VisitLessOrEqual(filter);if (filter.Assertion.Attribute.Options.Count > 0)
+            base.VisitLessOrEqual(filter);
+            if (filter.Assertion.Attribute.Options.Count > 0)
             {
                 _inner.Push(Expression.Constant(false));
                 return;
@@ -129,7 +138,12 @@ namespace eventphone.guru3.ldap
             }
             
             var value = Encoding.UTF8.GetString(filter.Assertion.Value.Span);
-            _inner.Push(Expression.LessThanOrEqual(property, Expression.Constant(value)));
+            if (!property.Type.IsAssignableFrom(typeof(string)))
+            {
+                throw new NotImplementedException("we have only string properties");
+            }
+            var compare = Expression.Call(null, _stringCompare, property, Expression.Constant(value));
+            _inner.Push(Expression.LessThanOrEqual(compare, Expression.Constant(0)));
         }
 
         protected override void VisitPresent(LdapPresentFilter filter)

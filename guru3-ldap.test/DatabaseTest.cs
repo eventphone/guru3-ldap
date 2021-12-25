@@ -15,7 +15,7 @@ namespace guru3_ldap.test
         {
             using (var context = new Guru3Context(_connectionString))
             {
-                context.Database.ExecuteSqlCommand("SELECT NOW();");
+                context.Database.ExecuteSqlRaw("SELECT NOW();");
             }
         }
 

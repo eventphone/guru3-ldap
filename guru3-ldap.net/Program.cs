@@ -17,8 +17,8 @@ namespace eventphone.guru3.ldap
                 .AddJsonFile("appsettings.json")
                 .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
                 .Build();
-            var listen = configuration.GetValue<string>("address", null);
-            var port = configuration.GetValue<ushort>("port");
+            var listen = configuration["address"];
+            var port = UInt16.Parse(configuration["port"]);
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
             LdapDBServer server;
@@ -31,8 +31,12 @@ namespace eventphone.guru3.ldap
                 var endpoint = new IPEndPoint(IPAddress.Parse(listen), port);
                 server = new LdapDBServer(endpoint, connectionString);
             }
-            var sslPort = configuration.GetValue<ushort?>("sslPort");
-            var cert = configuration.GetValue<string>("certificate");
+            ushort? sslPort = null;
+            if (UInt16.TryParse(configuration["sslPort"], out var value))
+            {
+                sslPort = value;
+            };
+            var cert = configuration["certificate"];
             if (!String.IsNullOrEmpty(cert))
             {
                 //SSL
@@ -52,7 +56,7 @@ namespace eventphone.guru3.ldap
                     server.UseSsl(options);
                 }
             }
-            server.AdminToken = configuration.GetValue<string>("token", null);
+            server.AdminToken = configuration["token"];
             using (server)
             using (var cts = new CancellationTokenSource())
             {

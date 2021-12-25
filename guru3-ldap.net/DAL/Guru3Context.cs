@@ -23,8 +23,7 @@ namespace eventphone.guru3.ldap.DAL
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseMySql(_connectionString)
-                    .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning));
+                optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
             }
         }
 

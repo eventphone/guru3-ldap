@@ -29,7 +29,7 @@ dotnet_csproj:
 build_script:
 - sh: >-
     dotnet build -c Release /p:RunningOnCore=true --self-contained -r linux-x64 guru3-ldap.net &&
-    dotnet publish -c Release --no-build guru3-ldap.net
+    dotnet publish -c Release --no-build --self-contained -r linux-x64 guru3-ldap.net
 artifacts:
 - path: guru3-ldap.net/bin/Release/netcoreapp2.1/publish
   name: guru3-ldap

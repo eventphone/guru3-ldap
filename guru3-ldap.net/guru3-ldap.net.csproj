@@ -6,6 +6,7 @@
     <RootNamespace>eventphone.guru3.ldap</RootNamespace>
     <AssemblyName>guru3-ldap</AssemblyName>
     <LangVersion>7.1</LangVersion>
+    <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>

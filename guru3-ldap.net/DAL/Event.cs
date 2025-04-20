@@ -15,7 +15,7 @@ namespace eventphone.guru3.ldap.DAL
         public string Name { get; set; }
 
         [Column("location_id")]
-        public long LocationId { get; set; }
+        public long? LocationId { get; set; }
 
         [ForeignKey(nameof(LocationId))]
         public Location Location { get; set; }

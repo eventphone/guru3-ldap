@@ -53,6 +53,11 @@ namespace eventphone.guru3.ldap
             };
         }
 
+        protected override void OnError(LdapClientConnection connection, LdapException exception)
+        {
+            Console.WriteLine($"Error {exception} [{connection.Id}]");
+        }
+
         protected override Task<ResultCode> OnBindAsync(LdapDistinguishedName bindDN, ReadOnlyMemory<byte> password, LdapClientConnection connection)
         {
             var username = bindDN.RDNs.SelectMany(x=>x.Values).Select(x=>x.Value).FirstOrDefault();

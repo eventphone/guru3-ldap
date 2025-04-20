@@ -57,6 +57,10 @@ namespace eventphone.guru3.ldap
                 }
             }
             server.AdminToken = configuration["token"];
+            if (Boolean.TryParse(configuration["debug"], out var debug))
+            {
+                server.EnableDebug =  debug;
+            }
             using (server)
             using (var cts = new CancellationTokenSource())
             {

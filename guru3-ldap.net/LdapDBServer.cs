@@ -37,6 +37,8 @@ namespace eventphone.guru3.ldap
         
         public string AdminToken { get; set; }
 
+        public bool EnableDebug { get; set; }
+
         private static RootDSE _rootDse;
         private static RootDSE GetRootDSE()
         {
@@ -55,7 +57,7 @@ namespace eventphone.guru3.ldap
 
         protected override void OnError(LdapClientConnection connection, LdapException exception)
         {
-            Console.WriteLine($"Error {exception} [{connection.Id}]");
+            if (EnableDebug) Console.WriteLine($"Error {exception} [{connection.Id}]");
         }
 
         protected override Task<ResultCode> OnBindAsync(LdapDistinguishedName bindDN, ReadOnlyMemory<byte> password, LdapClientConnection connection)

@@ -8,15 +8,17 @@ namespace eventphone.guru3.ldap.DAL
     public class Event
     {
         [Column("id")]
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         [Column("name")]
-        [MaxLength(128)]
+        [StringLength(128)]
         public string Name { get; set; }
 
-        [Column("location")]
-        [MaxLength(128)]
-        public string Location { get; set; }
+        [Column("location_id")]
+        public long LocationId { get; set; }
+
+        [ForeignKey(nameof(LocationId))]
+        public Location Location { get; set; }
 
         [Column("registrationStart")]
         public DateTime? RegistrationStart { get; set; }

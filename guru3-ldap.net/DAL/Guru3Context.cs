@@ -30,5 +30,7 @@ namespace eventphone.guru3.ldap.DAL
         public DbSet<Event> Events { get; set; }
         
         public DbSet<Extension> Extensions { get; set; }
+
+        public DbSet<Location> Locations { get; set; }
     }
 }

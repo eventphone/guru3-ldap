@@ -20,7 +20,7 @@ namespace eventphone.guru3.ldap
         private static readonly LdapDistinguishedName RootDN = new LdapDistinguishedName("dc=eventphone,dc=de");
 
         private readonly string _connectionString;
-        protected readonly ConcurrentDictionary<Guid, int> Sessions = new ConcurrentDictionary<Guid, int>();
+        protected readonly ConcurrentDictionary<Guid, long> Sessions = new ConcurrentDictionary<Guid, long>();
         private readonly ConcurrentDictionary<Guid, bool> _admins = new ConcurrentDictionary<Guid, bool>();
         
         public LdapDBServer(ushort port, string connectionString)
@@ -256,7 +256,7 @@ namespace eventphone.guru3.ldap
                     Id = x.Id,
                     Name = x.Name,
                     Description = x.DescriptionDe,
-                    Location = x.Location
+                    Location = x.Location.DisplayName
                 })
                 .Where(x => x.Name != null);
             return filter;

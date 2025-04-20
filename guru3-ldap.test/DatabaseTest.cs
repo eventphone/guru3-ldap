@@ -28,7 +28,7 @@ namespace guru3_ldap.test
                 Assert.NotNull(froscon);
                 Assert.Equal(66, froscon.Id);
                 Assert.Equal("FrOSCon 2018", froscon.Name);
-                Assert.Equal("FH Sankt Augustin", froscon.Location);
+                Assert.Equal("FH Sankt Augustin", froscon.Location.DisplayName);
                 Assert.Equal(new DateTime(2018,06,01), froscon.RegistrationStart);
                 Assert.Equal(new DateTime(2018,08,26), froscon.End);
                 Assert.Equal("de", froscon.DescriptionDe);

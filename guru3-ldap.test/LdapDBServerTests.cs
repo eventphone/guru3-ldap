@@ -58,7 +58,7 @@ namespace guru3_ldap.test
                 EventId = 3,
                 InPhonebook = true,
                 Location = "PoC",
-                Name = "zivilliän",
+                Name = "zivilliï¿½n",
                 Number = "4502"
             });
             context.Extensions.Add(new Extension
@@ -132,7 +132,7 @@ namespace guru3_ldap.test
                 EventId = 3,
                 InPhonebook = true,
                 Location = "CERT",
-                Name = "CÄRT",
+                Name = "Cï¿½RT",
                 Number = "112"
             });
             context.Extensions.Add(new Extension
@@ -158,13 +158,29 @@ namespace guru3_ldap.test
 
         private void AddEvents(Guru3Context context)
         {
+            context.Locations.Add(new Location{
+                Id = 1,
+                DisplayName = "Leipzig"
+            });
+            context.Locations.Add(new Location{
+                Id = 2,
+                DisplayName = "somewhere"
+            });
+            context.Locations.Add(new Location{
+                Id = 3,
+                DisplayName = "Dï¿½sseldorf"
+            });
+            context.Locations.Add(new Location{
+                Id = 4,
+                DisplayName = "moon"
+            });
             context.Events.Add(new Event
             {
                 Id = 1,
                 Name = "34c3",
                 RegistrationStart = new DateTime(2017, 12, 1),
                 End = new DateTime(2017, 12, 30),
-                Location = "Leipzig"
+                LocationId = 1
             });
             context.Events.Add(new Event
             {
@@ -172,15 +188,15 @@ namespace guru3_ldap.test
                 Name = "current",
                 RegistrationStart = DateTime.Now.AddDays(-7),
                 End = DateTime.Now.AddDays(7),
-                Location = "somewhere"
+                LocationId = 2
             });
             context.Events.Add(new Event
             {
                 Id = 3,
-                Name = "ümläut",
+                Name = "ï¿½mlï¿½ut",
                 RegistrationStart = DateTime.Now.AddDays(-1),
                 End = DateTime.Now.AddDays(14),
-                Location = "Düsseldorf"
+                LocationId = 3
             });
             context.Events.Add(new Event
             {
@@ -188,7 +204,7 @@ namespace guru3_ldap.test
                 Name = "future",
                 RegistrationStart = DateTime.Now.AddDays(7),
                 End = DateTime.Now.AddDays(14),
-                Location = "moon"
+                LocationId = 4
             });
         }
 

@@ -7,7 +7,7 @@ namespace eventphone.guru3.ldap.DAL
     public class Extension
     {
         [Column("id")]
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         [Column("extension")]
         public string Number { get; set; }
@@ -22,7 +22,7 @@ namespace eventphone.guru3.ldap.DAL
         public bool InPhonebook { get; set; }
 
         [Column("event_id")]
-        public int EventId { get; set; }
+        public long EventId { get; set; }
 
         [ForeignKey(nameof(EventId))]
         public Event Event { get; set; }

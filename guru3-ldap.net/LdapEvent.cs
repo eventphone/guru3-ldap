@@ -4,7 +4,7 @@ namespace eventphone.guru3.ldap
 {
     public class LdapEvent
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         public string Name { get; set; }
 

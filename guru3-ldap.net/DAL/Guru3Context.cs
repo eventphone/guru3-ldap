@@ -23,7 +23,7 @@ namespace eventphone.guru3.ldap.DAL
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
+                optionsBuilder.UseNpgsql(_connectionString);
             }
         }
 

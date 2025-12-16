@@ -45,7 +45,7 @@ namespace eventphone.guru3.ldap
                     AllowRenegotiation = true,
                     ClientCertificateRequired = false,
                     EncryptionPolicy = EncryptionPolicy.RequireEncryption,
-                    ServerCertificate = X509CertificateLoader.LoadCertificateFromFile(cert),
+                    ServerCertificate = X509CertificateLoader.LoadPkcs12FromFile(cert, null),
                 };
                 if (sslPort != null)
                 {

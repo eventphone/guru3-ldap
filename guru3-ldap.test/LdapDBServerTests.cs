@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -212,12 +216,37 @@ namespace guru3_ldap.test
         {
             private readonly DbContextOptions<Guru3Context> _contextOptions;
             private readonly LdapClientConnection _connection;
+            private readonly TcpListener _listener;
+            private readonly TcpClient _client;
 
             public TestLdapServer(DbContextOptions<Guru3Context> context)
                 : base(389, null)
             {
                 _contextOptions = context;
-                _connection = new LdapClientConnection(null, null, new CancellationTokenSource());
+                var port = NextFreePort(10000);
+                _listener = new TcpListener(IPAddress.Loopback, port);
+                _listener.Start();
+                _client = new TcpClient();
+                _client.Connect(IPAddress.Loopback, port);
+                _connection = new LdapClientConnection(_client, null, new CancellationTokenSource());
+            }
+
+            static bool IsFree(int port)
+            {
+                IPGlobalProperties properties = IPGlobalProperties.GetIPGlobalProperties();
+                IPEndPoint[] listeners = properties.GetActiveTcpListeners();
+                int[] openPorts = listeners.Select(item => item.Port).ToArray<int>();
+                return openPorts.All(openPort => openPort != port);
+            }
+
+            static int NextFreePort(int port = 0)
+            {
+                port = (port > 0) ? port : new Random().Next(1, 65535);
+                while (!IsFree(port))
+                {
+                    port += 1;
+                }
+                return port;
             }
 
             protected override Guru3Context GetContext()
@@ -231,6 +260,8 @@ namespace guru3_ldap.test
                 if (disposing)
                 {
                     _connection.Dispose();
+                    _client.Dispose();
+                    _listener.Dispose();
                 }
             }
 

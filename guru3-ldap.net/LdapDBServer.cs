@@ -248,7 +248,7 @@ namespace eventphone.guru3.ldap
 
         private IQueryable<LdapEvent> SearchEvent(IQueryable<Event> events, LdapClientConnection connection)
         {
-            var now = DateTime.Now.Date;
+            var now = DateTime.UtcNow.Date;
             if (!_admins.ContainsKey(connection.Id))
             {
                 events = events

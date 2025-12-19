@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -58,7 +58,7 @@ namespace guru3_ldap.test
                 EventId = 3,
                 InPhonebook = true,
                 Location = "PoC",
-                Name = "zivilli�n",
+                Name = "zivilliän",
                 Number = "4502"
             });
             context.Extensions.Add(new Extension
@@ -132,7 +132,7 @@ namespace guru3_ldap.test
                 EventId = 3,
                 InPhonebook = true,
                 Location = "CERT",
-                Name = "C�RT",
+                Name = "CÄRT",
                 Number = "112"
             });
             context.Extensions.Add(new Extension
@@ -168,7 +168,7 @@ namespace guru3_ldap.test
             });
             context.Locations.Add(new Location{
                 Id = 3,
-                DisplayName = "D�sseldorf"
+                DisplayName = "Düsseldorf"
             });
             context.Locations.Add(new Location{
                 Id = 4,
@@ -193,7 +193,7 @@ namespace guru3_ldap.test
             context.Events.Add(new Event
             {
                 Id = 3,
-                Name = "�ml�ut",
+                Name = "ümläut",
                 RegistrationStart = DateTime.Now.AddDays(-1),
                 End = DateTime.Now.AddDays(14),
                 LocationId = 3

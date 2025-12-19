@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Threading.Tasks;
 using Xunit;
 using zivillian.ldap;
@@ -68,7 +68,7 @@ namespace guru3_ldap.test
         {
             using (var server = GetServer(nameof(CanBindUmlautEvent)))
             {
-                var result = await server.Bind("cn=ümläut", Guid.NewGuid().ToString());
+                var result = await server.Bind("cn=Ã¼mlÃ¤ut", Guid.NewGuid().ToString());
                 Assert.Equal(ResultCode.Success, result);
                 Assert.True(server.HasEvent);
             }

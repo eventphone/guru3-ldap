@@ -1,4 +1,0 @@
-[submodule "ldap.net"]
-	path = ldap.net
-	url = https://github.com/zivillian/ldap.net.git
-	branch = server

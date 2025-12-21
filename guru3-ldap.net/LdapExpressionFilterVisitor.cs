@@ -10,7 +10,7 @@ namespace eventphone.guru3.ldap
 {
     public abstract class LdapFilterDBVisitor : LdapFilterVisitor
     {
-        protected static readonly MethodInfo LikeFunction = typeof(DbFunctionsExtensions).GetMethod(nameof(DbFunctionsExtensions.Like),
+        protected static readonly MethodInfo LikeFunction = typeof(NpgsqlDbFunctionsExtensions).GetMethod(nameof(NpgsqlDbFunctionsExtensions.ILike),
             new[] {typeof(DbFunctions), typeof(string), typeof(string)});
 
         protected static readonly MethodInfo IsNullOrEmptyFunction = typeof(String).GetMethod(nameof(String.IsNullOrEmpty));
